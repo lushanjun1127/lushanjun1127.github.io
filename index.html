@@ -3,11 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>动漫爱好者的个人主页 | 前端开发者</title>
+  <title>喵酱的仪表盘 | 二次元开发者</title>
   
   <!-- 引入外部资源 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- 引入方正喵呜体 -->
+  <style>
+    @font-face {
+      font-family: 'FZMW';
+      src: url('https://fonts.cdnfonts.com/css/fangzheng-mao-wu') format('truetype');
+      font-display: swap;
+    }
+  </style>
   
   <!-- Tailwind 配置 -->
   <script>
@@ -15,22 +25,21 @@
       theme: {
         extend: {
           colors: {
-            primary: '#ff6b9b',
-            'primary-dark': '#ff4a87',
-            secondary: '#9d65c9',
-            light: '#fff5f8',
-            dark: '#4a306d',
-            accent: '#ffd166',
+            primary: '#FF7EB9',
+            'primary-light': '#FFB6C1',
+            'primary-dark': '#FF69B4',
+            secondary: '#A78BFA',
+            'secondary-light': '#C4B5FD',
+            accent: '#FECACA',
+            light: '#FFF5F8',
+            dark: '#6B46C1',
           },
           fontFamily: {
-            sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
-          },
-          borderRadius: {
-            'xl': '20px',
+            cat: ['FZMW', 'Segoe UI', 'sans-serif'],
           },
           boxShadow: {
-            'anime': '0 6px 15px rgba(255,107,155,0.15)',
-            'anime-hover': '0 15px 30px rgba(255,107,155,0.25)',
+            'card': '0 4px 12px rgba(255,126,185,0.15)',
+            'card-hover': '0 10px 25px rgba(255,105,180,0.25)',
           }
         },
       }
@@ -43,559 +52,703 @@
       .content-auto {
         content-visibility: auto;
       }
-      .module-transition {
-        transition: all 0.3s ease;
+      .dashboard-card {
+        @apply bg-white rounded-xl shadow-card p-5 transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 border border-primary/10;
+      }
+      .stat-card {
+        @apply dashboard-card flex flex-col items-center justify-center text-center;
+      }
+      .dashboard-header {
+        @apply flex justify-between items-center mb-4;
+      }
+      .dashboard-title {
+        @apply font-bold text-lg flex items-center gap-2 text-dark;
+      }
+      .progress-ring {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
       }
     }
   </style>
   
-  <!-- 关键CSS -->
   <style>
-    :root{
-      --primary: #ff6b9b;
-      --primary-dark: #ff4a87;
-      --secondary: #9d65c9;
-      --light: #fff5f8;
-      --dark: #4a306d;
-      --accent: #ffd166;
-      --radius: 20px;
-      --shadow: 0 6px 15px rgba(255,107,155,0.15);
-      --transition: all 0.3s ease;
+    /* 基础样式 */
+    :root {
+      --primary: #FF7EB9;
+      --primary-light: #FFB6C1;
+      --primary-dark: #FF69B4;
+      --secondary: #A78BFA;
+      --secondary-light: #C4B5FD;
+      --accent: #FECACA;
+      --light: #FFF5F8;
+      --dark: #6B46C1;
     }
     
-    /* 深色模式变量 */
-    [data-theme="dark"] {
-      --primary: #ff86b0;
-      --primary-dark: #ff6b9b;
-      --secondary: #b784d9;
-      --light: #2a1b47;
-      --dark: #f0e6ff;
-      --accent: #ffdf8c;
-      --shadow: 0 6px 15px rgba(0,0,0,0.3);
-    }
-    
-    /* 平滑滚动 */
     html {
       scroll-behavior: smooth;
     }
     
-    /* 页面加载动画 */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    body {
+      font-family: 'FZMW', sans-serif;
+      background-color: var(--light);
+      background-image: 
+        radial-gradient(var(--primary-light) 0.5px, transparent 0.5px),
+        radial-gradient(var(--primary-light) 0.5px, var(--light) 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
     }
     
-    /* 技能条动画 */
-    .skill-progress {
-      width: 0;
-      transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    
-    /* 模块进入动画 */
-    .module {
+    /* 动画效果 */
+    .fade-in {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(15px);
       transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     }
     
-    .module.visible {
+    .fade-in.visible {
       opacity: 1;
       transform: translateY(0);
     }
+    
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--light);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-light);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+    
+    /* 装饰元素 */
+    .badge {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .badge::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 8px;
+      height: 8px;
+      background-color: var(--primary);
+      border-radius: 50%;
+    }
   </style>
 </head>
-<body class="bg-light text-dark module-transition min-h-screen">
-  <!-- 页面加载器 -->
-  <div id="page-loader" class="fixed inset-0 bg-light flex flex-col items-center justify-center z-50 transition-opacity duration-500">
-    <div class="loader-spinner w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-    <div>加载中...</div>
-  </div>
-
+<body class="text-gray-700">
   <!-- 顶部导航栏 -->
-  <header class="navbar bg-white shadow-md sticky top-0 z-40 module-transition">
-    <div class="navbar-container max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-      <a href="#" class="navbar-brand text-primary font-bold text-xl">动漫前端开发者</a>
-      
-      <div class="menu-btn md:hidden text-primary text-xl cursor-pointer" onclick="toggleMenu()">
-        <i class="fa fa-bars"></i>
+  <header class="bg-white/80 backdrop-blur-md border-b border-primary/20 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center gap-3">
+          <div class="text-primary text-2xl">💖</div>
+          <h1 class="text-xl font-bold text-dark">喵酱的仪表盘</h1>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <button class="relative p-2 text-gray-500 hover:text-primary transition-colors">
+            <i class="fa fa-bell-o text-xl"></i>
+            <span class="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
+          </button>
+          
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-primary/30">
+              <img src="https://picsum.photos/seed/animeprofile/100/100" alt="个人头像" class="w-full h-full object-cover">
+            </div>
+            <span class="hidden md:inline font-medium">喵酱</span>
+          </div>
+        </div>
       </div>
-      
-      <nav class="navbar-links hidden md:flex space-x-6">
-        <a href="#about" class="font-medium hover:text-primary transition-colors">关于我</a>
-        <a href="#skills" class="font-medium hover:text-primary transition-colors">技能</a>
-        <a href="#projects" class="font-medium hover:text-primary transition-colors">项目</a>
-        <a href="#contact" class="font-medium hover:text-primary transition-colors">联系我</a>
-      </nav>
     </div>
   </header>
 
-  <!-- 移动端菜单 -->
-  <div id="mobile-menu" class="fixed inset-0 bg-light/95 z-30 transform translate-x-full transition-transform duration-300 md:hidden">
-    <div class="flex justify-end p-4">
-      <div class="menu-close text-primary text-2xl cursor-pointer" onclick="toggleMenu()">
-        <i class="fa fa-times"></i>
-      </div>
-    </div>
-    <nav class="flex flex-col items-center space-y-6 text-xl mt-16">
-      <a href="#about" class="font-medium hover:text-primary transition-colors" onclick="toggleMenu()">关于我</a>
-      <a href="#skills" class="font-medium hover:text-primary transition-colors" onclick="toggleMenu()">技能</a>
-      <a href="#projects" class="font-medium hover:text-primary transition-colors" onclick="toggleMenu()">项目</a>
-      <a href="#contact" class="font-medium hover:text-primary transition-colors" onclick="toggleMenu()">联系我</a>
-    </nav>
-  </div>
-
-  <!-- 内容区域 -->
-  <main class="max-w-7xl mx-auto px-4 py-8">
-    <!-- 英雄模块 -->
-    <section class="module mb-12 rounded-xl bg-white shadow-anime p-6 md:p-8 overflow-hidden relative">
-      <div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16"></div>
-      <div class="absolute bottom-0 left-0 w-40 h-40 bg-secondary/10 rounded-full -ml-20 -mb-20"></div>
-      
-      <div class="relative z-10 flex flex-col md:flex-row items-center">
-        <div class="md:w-1/2 mb-6 md:mb-0">
-          <h1 class="text-[clamp(1.8rem,5vw,3rem)] font-bold mb-4 text-dark">
-            动漫爱好者<br>
-            <span class="text-primary">前端开发者</span>
-          </h1>
-          <p class="text-lg mb-6">将对动漫的热爱融入代码，创造富有生命力的 web 体验</p>
-          <div class="flex flex-wrap gap-4">
-            <a href="#projects" class="btn-primary bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all">
-              查看我的作品
-            </a>
-            <a href="#contact" class="btn-outline border-2 border-secondary text-secondary hover:bg-secondary hover:text-white font-semibold py-3 px-6 rounded-full hover:-translate-y-1 transition-all">
-              联系我
-            </a>
-          </div>
-        </div>
-        <div class="md:w-1/2 flex justify-center">
-          <div class="w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-primary/20 shadow-lg">
-            <img src="https://picsum.photos/seed/anime/400/400" alt="动漫风格的个人头像" class="w-full h-full object-cover">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 关于我模块 -->
-    <section id="about" class="module mb-12 rounded-xl bg-white shadow-anime p-6 md:p-8">
-      <div class="flex items-center mb-6">
-        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
-          <i class="fa fa-user text-primary text-xl"></i>
-        </div>
-        <h2 class="text-2xl md:text-3xl font-bold">关于我</h2>
-      </div>
-      
-      <div class="prose max-w-none">
-        <p class="mb-4 text-lg">我是一名充满热情的前端开发者，同时也是一位资深动漫爱好者。我相信好的用户界面应该像优秀的动漫作品一样，既能带来视觉享受，又能讲述动人的故事。</p>
-        
-        <p class="mb-4">从事前端开发已有5年时间，我擅长将创意转化为流畅的用户体验，专注于构建响应式、高性能且具有吸引力的web应用。我特别喜欢将动漫元素融入到我的设计中，创造出独特而有趣的交互体验。</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <div class="bg-light p-5 rounded-lg border border-primary/10">
-            <div class="text-primary text-2xl mb-2"><i class="fa fa-code"></i></div>
-            <h3 class="font-bold text-lg mb-2">前端开发</h3>
-            <p>精通现代前端技术栈，构建美观且功能强大的web应用</p>
-          </div>
-          
-          <div class="bg-light p-5 rounded-lg border border-primary/10">
-            <div class="text-primary text-2xl mb-2"><i class="fa fa-paint-brush"></i></div>
-            <h3 class="font-bold text-lg mb-2">UI/UX设计</h3>
-            <p>注重用户体验，创造直观且富有吸引力的界面设计</p>
-          </div>
-          
-          <div class="bg-light p-5 rounded-lg border border-primary/10">
-            <div class="text-primary text-2xl mb-2"><i class="fa fa-heart"></i></div>
-            <h3 class="font-bold text-lg mb-2">动漫文化</h3>
-            <p>深入了解动漫文化，擅长将二次元元素融入设计中</p>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <!-- 技能模块 -->
-    <section id="skills" class="module mb-12 rounded-xl bg-white shadow-anime p-6 md:p-8">
-      <div class="flex items-center mb-6">
-        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
-          <i class="fa fa-cogs text-primary text-xl"></i>
-        </div>
-        <h2 class="text-2xl md:text-3xl font-bold">我的技能</h2>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- 主内容区域 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- 欢迎面板 -->
+    <section class="dashboard-card mb-6 fade-in">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h3 class="text-xl font-semibold mb-4">技术技能</h3>
-          
-          <div class="space-y-6">
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium">HTML5 & CSS3</span>
-                <span>95%</span>
-              </div>
-              <div class="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden">
-                <div class="skill-progress h-full bg-gradient-to-r from-primary to-secondary rounded-full" data-width="95%"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium">JavaScript (ES6+)</span>
-                <span>90%</span>
-              </div>
-              <div class="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden">
-                <div class="skill-progress h-full bg-gradient-to-r from-primary to-secondary rounded-full" data-width="90%"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium">React & Vue</span>
-                <span>85%</span>
-              </div>
-              <div class="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden">
-                <div class="skill-progress h-full bg-gradient-to-r from-primary to-secondary rounded-full" data-width="85%"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium">Tailwind CSS & SCSS</span>
-                <span>88%</span>
-              </div>
-              <div class="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden">
-                <div class="skill-progress h-full bg-gradient-to-r from-primary to-secondary rounded-full" data-width="88%"></div>
-              </div>
-            </div>
-            
-            <div>
-              <div class="flex justify-between mb-2">
-                <span class="font-medium">响应式设计</span>
-                <span>92%</span>
-              </div>
-              <div class="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden">
-                <div class="skill-progress h-full bg-gradient-to-r from-primary to-secondary rounded-full" data-width="92%"></div>
-              </div>
-            </div>
-          </div>
+          <h2 class="text-2xl font-bold text-dark">嗨，喵酱！</h2>
+          <p class="text-gray-500">今天是 <span id="current-date"></span>，这是你的个人数据概览</p>
         </div>
         
-        <div>
-          <h3 class="text-xl font-semibold mb-4">软技能</h3>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2">
+            <i class="fa fa-refresh"></i>
+            <span>刷新数据</span>
+          </button>
           
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-light p-4 rounded-lg border border-primary/10 hover:border-primary transition-colors">
-              <div class="flex items-center mb-2">
-                <i class="fa fa-lightbulb-o text-primary mr-2"></i>
-                <h4 class="font-medium">创意设计</h4>
-              </div>
-              <p class="text-sm">将动漫灵感转化为独特的设计方案</p>
+          <button class="px-4 py-2 bg-white text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors">
+            <i class="fa fa-download"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 统计卡片 -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <!-- 项目统计 -->
+      <div class="stat-card fade-in">
+        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
+          <i class="fa fa-folder-open text-xl"></i>
+        </div>
+        <h3 class="text-sm text-gray-500 mb-1">进行中项目</h3>
+        <p class="text-3xl font-bold text-dark">7</p>
+        <p class="text-xs text-green-500 mt-2 flex items-center">
+          <i class="fa fa-arrow-up mr-1"></i> 较上周 +2
+        </p>
+      </div>
+      
+      <!-- 技能掌握 -->
+      <div class="stat-card fade-in">
+        <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary mb-3">
+          <i class="fa fa-code text-xl"></i>
+        </div>
+        <h3 class="text-sm text-gray-500 mb-1">技能掌握度</h3>
+        <p class="text-3xl font-bold text-dark">85%</p>
+        <p class="text-xs text-green-500 mt-2 flex items-center">
+          <i class="fa fa-arrow-up mr-1"></i> 本月 +3%
+        </p>
+      </div>
+      
+      <!-- 博客文章 -->
+      <div class="stat-card fade-in">
+        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
+          <i class="fa fa-pencil text-xl"></i>
+        </div>
+        <h3 class="text-sm text-gray-500 mb-1">博客文章</h3>
+        <p class="text-3xl font-bold text-dark">24</p>
+        <p class="text-xs text-blue-500 mt-2 flex items-center">
+          <i class="fa fa-eye mr-1"></i> 总阅读量 12.5k
+        </p>
+      </div>
+      
+      <!-- 社交互动 -->
+      <div class="stat-card fade-in">
+        <div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary mb-3">
+          <i class="fa fa-comments text-xl"></i>
+        </div>
+        <h3 class="text-sm text-gray-500 mb-1">未读消息</h3>
+        <p class="text-3xl font-bold text-dark">5</p>
+        <p class="text-xs text-red-500 mt-2 flex items-center">
+          <i class="fa fa-exclamation-circle mr-1"></i> 需要回复
+        </p>
+      </div>
+    </section>
+    
+    <!-- 图表和项目进度 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- 技能趋势图表 -->
+      <div class="lg:col-span-2 dashboard-card fade-in">
+        <div class="dashboard-header">
+          <h3 class="dashboard-title">
+            <i class="fa fa-line-chart text-primary"></i>
+            技能提升趋势
+          </h3>
+          <div class="flex gap-2">
+            <button class="px-3 py-1 text-xs bg-primary/10 text-primary rounded-full">月度</button>
+            <button class="px-3 py-1 text-xs hover:bg-gray-100 rounded-full">季度</button>
+            <button class="px-3 py-1 text-xs hover:bg-gray-100 rounded-full">年度</button>
+          </div>
+        </div>
+        <div class="h-64">
+          <canvas id="skillsChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- 项目完成进度 -->
+      <div class="dashboard-card fade-in">
+        <div class="dashboard-header">
+          <h3 class="dashboard-title">
+            <i class="fa fa-tasks text-primary"></i>
+            项目完成进度
+          </h3>
+          <button class="text-gray-400 hover:text-primary">
+            <i class="fa fa-ellipsis-v"></i>
+          </button>
+        </div>
+        
+        <div class="space-y-6">
+          <!-- 项目1 -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm font-medium">动漫资讯站</span>
+              <span class="text-sm text-primary">85%</span>
             </div>
-            
-            <div class="bg-light p-4 rounded-lg border border-primary/10 hover:border-primary transition-colors">
-              <div class="flex items-center mb-2">
-                <i class="fa fa-users text-primary mr-2"></i>
-                <h4 class="font-medium">团队协作</h4>
-              </div>
-              <p class="text-sm">高效的沟通能力和团队合作精神</p>
-            </div>
-            
-            <div class="bg-light p-4 rounded-lg border border-primary/10 hover:border-primary transition-colors">
-              <div class="flex items-center mb-2">
-                <i class="fa fa-bolt text-primary mr-2"></i>
-                <h4 class="font-medium">问题解决</h4>
-              </div>
-              <p class="text-sm">快速分析并解决复杂技术问题</p>
-            </div>
-            
-            <div class="bg-light p-4 rounded-lg border border-primary/10 hover:border-primary transition-colors">
-              <div class="flex items-center mb-2">
-                <i class="fa fa-book text-primary mr-2"></i>
-                <h4 class="font-medium">持续学习</h4>
-              </div>
-              <p class="text-sm">不断学习新技术和设计趋势</p>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-primary to-primary-light rounded-full" style="width: 85%"></div>
             </div>
           </div>
           
-          <div class="mt-6">
-            <h3 class="text-xl font-semibold mb-4">语言能力</h3>
-            <div class="flex flex-wrap gap-2">
-              <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">中文 (母语)</span>
-              <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">英语 (流利)</span>
-              <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">日语 (中级)</span>
+          <!-- 项目2 -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm font-medium">角色生成器</span>
+              <span class="text-sm text-primary">60%</span>
+            </div>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-primary to-primary-light rounded-full" style="width: 60%"></div>
+            </div>
+          </div>
+          
+          <!-- 项目3 -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm font-medium">台词数据库</span>
+              <span class="text-sm text-primary">92%</span>
+            </div>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-primary to-primary-light rounded-full" style="width: 92%"></div>
+            </div>
+          </div>
+          
+          <!-- 项目4 -->
+          <div>
+            <div class="flex justify-between mb-2">
+              <span class="text-sm font-medium">二次元社区</span>
+              <span class="text-sm text-primary">30%</span>
+            </div>
+            <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-primary to-primary-light rounded-full" style="width: 30%"></div>
             </div>
           </div>
         </div>
       </div>
     </section>
     
-    <!-- 项目模块 -->
-    <section id="projects" class="module mb-12 rounded-xl bg-white shadow-anime p-6 md:p-8">
-      <div class="flex items-center mb-6">
-        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
-          <i class="fa fa-folder-open text-primary text-xl"></i>
+    <!-- 技能分布和最近活动 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- 技能分布 -->
+      <div class="dashboard-card fade-in">
+        <div class="dashboard-header">
+          <h3 class="dashboard-title">
+            <i class="fa fa-pie-chart text-primary"></i>
+            技能分布
+          </h3>
+          <button class="text-gray-400 hover:text-primary">
+            <i class="fa fa-refresh"></i>
+          </button>
         </div>
-        <h2 class="text-2xl md:text-3xl font-bold">我的项目</h2>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- 项目卡片 1 -->
-        <div class="bg-light rounded-xl overflow-hidden shadow-md hover:shadow-anime-hover hover:-translate-y-2 transition-all border border-primary/10">
-          <div class="relative">
-            <img src="https://picsum.photos/seed/anime1/400/250" alt="动漫资讯网站" class="w-full h-48 object-cover">
-            <div class="absolute top-3 right-3 bg-accent text-dark px-3 py-1 rounded-full text-sm font-medium">
-              React
-            </div>
-          </div>
-          <div class="p-5">
-            <h3 class="text-xl font-bold mb-2">动漫资讯网站</h3>
-            <p class="text-sm mb-4">一个集动漫新闻、新番资讯、角色介绍于一体的响应式网站，采用现代UI设计理念。</p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">React</span>
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">Redux</span>
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">Tailwind</span>
-            </div>
-            <a href="#" class="text-primary font-medium hover:underline inline-flex items-center">
-              查看详情 <i class="fa fa-arrow-right ml-1"></i>
-            </a>
-          </div>
-        </div>
-        
-        <!-- 项目卡片 2 -->
-        <div class="bg-light rounded-xl overflow-hidden shadow-md hover:shadow-anime-hover hover:-translate-y-2 transition-all border border-primary/10">
-          <div class="relative">
-            <img src="https://picsum.photos/seed/anime2/400/250" alt="二次元角色生成器" class="w-full h-48 object-cover">
-            <div class="absolute top-3 right-3 bg-accent text-dark px-3 py-1 rounded-full text-sm font-medium">
-              Vue
-            </div>
-          </div>
-          <div class="p-5">
-            <h3 class="text-xl font-bold mb-2">二次元角色生成器</h3>
-            <p class="text-sm mb-4">一个交互式工具，用户可以自定义生成独特的二次元角色形象，包含多种风格和元素。</p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">Vue 3</span>
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">Canvas</span>
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">SCSS</span>
-            </div>
-            <a href="#" class="text-primary font-medium hover:underline inline-flex items-center">
-              查看详情 <i class="fa fa-arrow-right ml-1"></i>
-            </a>
-          </div>
-        </div>
-        
-        <!-- 项目卡片 3 -->
-        <div class="bg-light rounded-xl overflow-hidden shadow-md hover:shadow-anime-hover hover:-translate-y-2 transition-all border border-primary/10">
-          <div class="relative">
-            <img src="https://picsum.photos/seed/anime3/400/250" alt="动漫台词数据库" class="w-full h-48 object-cover">
-            <div class="absolute top-3 right-3 bg-accent text-dark px-3 py-1 rounded-full text-sm font-medium">
-              JavaScript
-            </div>
-          </div>
-          <div class="p-5">
-            <h3 class="text-xl font-bold mb-2">动漫台词数据库</h3>
-            <p class="text-sm mb-4">一个收集和展示经典动漫台词的单页应用，支持按角色、作品和关键词搜索。</p>
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">JavaScript</span>
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">IndexedDB</span>
-              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-xs">CSS Grid</span>
-            </div>
-            <a href="#" class="text-primary font-medium hover:underline inline-flex items-center">
-              查看详情 <i class="fa fa-arrow-right ml-1"></i>
-            </a>
-          </div>
+        <div class="h-64 flex items-center justify-center">
+          <canvas id="skillsDistribution"></canvas>
         </div>
       </div>
       
-      <div class="text-center mt-8">
-        <a href="#" class="inline-block bg-secondary hover:bg-secondary/90 text-white font-semibold py-3 px-8 rounded-full shadow-md hover:shadow-lg hover:-translate-y-1 transition-all">
-          查看更多项目 <i class="fa fa-chevron-right ml-1"></i>
-        </a>
+      <!-- 最近活动 -->
+      <div class="lg:col-span-2 dashboard-card fade-in">
+        <div class="dashboard-header">
+          <h3 class="dashboard-title">
+            <i class="fa fa-history text-primary"></i>
+            最近活动
+          </h3>
+          <a href="#" class="text-sm text-primary hover:underline">查看全部</a>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- 活动1 -->
+          <div class="flex items-start gap-4 pb-4 border-b border-gray-100">
+            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 mt-1">
+              <i class="fa fa-code"></i>
+            </div>
+            <div>
+              <p class="text-sm">完成了 <span class="font-medium">动漫资讯站</span> 的首页重构</p>
+              <p class="text-xs text-gray-500 mt-1">今天 10:24</p>
+            </div>
+          </div>
+          
+          <!-- 活动2 -->
+          <div class="flex items-start gap-4 pb-4 border-b border-gray-100">
+            <div class="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary flex-shrink-0 mt-1">
+              <i class="fa fa-pencil"></i>
+            </div>
+            <div>
+              <p class="text-sm">发布了新文章 <span class="font-medium">《CSS实现二次元动画效果》</span></p>
+              <p class="text-xs text-gray-500 mt-1">昨天 16:45</p>
+            </div>
+          </div>
+          
+          <!-- 活动3 -->
+          <div class="flex items-start gap-4 pb-4 border-b border-gray-100">
+            <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-500 flex-shrink-0 mt-1">
+              <i class="fa fa-check"></i>
+            </div>
+            <div>
+              <p class="text-sm">完成了 <span class="font-medium">React状态管理</span> 学习任务</p>
+              <p class="text-xs text-gray-500 mt-1">2023-06-14 09:12</p>
+            </div>
+          </div>
+          
+          <!-- 活动4 -->
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 flex-shrink-0 mt-1">
+              <i class="fa fa-comment"></i>
+            </div>
+            <div>
+              <p class="text-sm">回复了 <span class="font-medium">GitHub</span> 上的3个issue</p>
+              <p class="text-xs text-gray-500 mt-1">2023-06-13 15:30</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     
-    <!-- 联系模块 -->
-    <section id="contact" class="module mb-12 rounded-xl bg-white shadow-anime p-6 md:p-8">
-      <div class="flex items-center mb-6">
-        <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center mr-4">
-          <i class="fa fa-envelope text-primary text-xl"></i>
+    <!-- 博客文章和社交链接 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- 最新博客文章 -->
+      <div class="lg:col-span-2 dashboard-card fade-in">
+        <div class="dashboard-header">
+          <h3 class="dashboard-title">
+            <i class="fa fa-newspaper-o text-primary"></i>
+            最新博客文章
+          </h3>
+          <a href="#" class="text-sm text-primary hover:underline">管理文章</a>
         </div>
-        <h2 class="text-2xl md:text-3xl font-bold">联系我</h2>
+        
+        <div class="space-y-4">
+          <!-- 文章1 -->
+          <div class="flex gap-4 pb-4 border-b border-gray-100">
+            <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              <img src="https://picsum.photos/seed/animeblog1/200/200" alt="CSS动画教程" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h4 class="font-medium text-sm mb-1">用CSS实现二次元风格的动画效果</h4>
+              <div class="flex items-center text-xs text-gray-500 mb-2">
+                <span><i class="fa fa-calendar-o mr-1"></i> 2023-06-15</span>
+                <span class="mx-2">•</span>
+                <span><i class="fa fa-eye mr-1"></i> 328</span>
+                <span class="mx-2">•</span>
+                <span><i class="fa fa-comment-o mr-1"></i> 12</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-2 py-1 bg-primary/10 text-primary rounded">编辑</button>
+                <button class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">预览</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 文章2 -->
+          <div class="flex gap-4 pb-4 border-b border-gray-100">
+            <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              <img src="https://picsum.photos/seed/animeblog2/200/200" alt="React状态管理" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h4 class="font-medium text-sm mb-1">React状态管理的几种方式对比</h4>
+              <div class="flex items-center text-xs text-gray-500 mb-2">
+                <span><i class="fa fa-calendar-o mr-1"></i> 2023-05-28</span>
+                <span class="mx-2">•</span>
+                <span><i class="fa fa-eye mr-1"></i> 456</span>
+                <span class="mx-2">•</span>
+                <span><i class="fa fa-comment-o mr-1"></i> 23</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-2 py-1 bg-primary/10 text-primary rounded">编辑</button>
+                <button class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">预览</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 文章3 -->
+          <div class="flex gap-4">
+            <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              <img src="https://picsum.photos/seed/animeblog3/200/200" alt="动漫网站设计" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <h4 class="font-medium text-sm mb-1">二次元网站的色彩搭配技巧</h4>
+              <div class="flex items-center text-xs text-gray-500 mb-2">
+                <span><i class="fa fa-calendar-o mr-1"></i> 2023-04-12</span>
+                <span class="mx-2">•</span>
+                <span><i class="fa fa-eye mr-1"></i> 621</span>
+                <span class="mx-2">•</span>
+                <span><i class="fa fa-comment-o mr-1"></i> 31</span>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-2 py-1 bg-primary/10 text-primary rounded">编辑</button>
+                <button class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">预览</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div class="text-center max-w-2xl mx-auto">
-        <p class="mb-8 text-lg">如果你有项目想合作，或者只是想聊聊动漫和技术，欢迎通过以下方式联系我！</p>
-        
-        <div class="flex flex-wrap justify-center gap-6 mb-10">
-          <a href="#" class="flex flex-col items-center group">
-            <div class="w-16 h-16 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center text-[#1DA1F2] group-hover:bg-[#1DA1F2] group-hover:text-white transition-colors mb-3">
-              <i class="fa fa-twitter text-2xl"></i>
-            </div>
-            <span class="font-medium">Twitter</span>
-            <span class="text-sm text-dark/70">@anime_dev</span>
-          </a>
-          
-          <a href="#" class="flex flex-col items-center group">
-            <div class="w-16 h-16 rounded-full bg-[#E60023]/10 flex items-center justify-center text-[#E60023] group-hover:bg-[#E60023] group-hover:text-white transition-colors mb-3">
-              <i class="fa fa-instagram text-2xl"></i>
-            </div>
-            <span class="font-medium">Instagram</span>
-            <span class="text-sm text-dark/70">@anime_developer</span>
-          </a>
-          
-          <a href="#" class="flex flex-col items-center group">
-            <div class="w-16 h-16 rounded-full bg-[#333]/10 flex items-center justify-center text-[#333] group-hover:bg-[#333] group-hover:text-white transition-colors mb-3">
-              <i class="fa fa-github text-2xl"></i>
-            </div>
-            <span class="font-medium">GitHub</span>
-            <span class="text-sm text-dark/70">github.com/anime-dev</span>
-          </a>
-          
-          <a href="#" class="flex flex-col items-center group">
-            <div class="w-16 h-16 rounded-full bg-[#0A66C2]/10 flex items-center justify-center text-[#0A66C2] group-hover:bg-[#0A66C2] group-hover:text-white transition-colors mb-3">
-              <i class="fa fa-linkedin text-2xl"></i>
-            </div>
-            <span class="font-medium">LinkedIn</span>
-            <span class="text-sm text-dark/70">linkedin.com/in/anime-dev</span>
-          </a>
+      <!-- 社交链接和数据 -->
+      <div class="dashboard-card fade-in">
+        <div class="dashboard-header">
+          <h3 class="dashboard-title">
+            <i class="fa fa-share-alt text-primary"></i>
+            社交数据
+          </h3>
+          <button class="text-gray-400 hover:text-primary">
+            <i class="fa fa-cog"></i>
+          </button>
         </div>
         
-        <div class="bg-light p-6 rounded-xl border border-primary/10">
-          <h3 class="text-xl font-semibold mb-3">商务合作</h3>
-          <p class="mb-0">对于项目合作和商务咨询，可直接发送邮件至：</p>
-          <a href="mailto:business@anime-dev.com" class="text-primary font-medium hover:underline mt-2 inline-block">business@anime-dev.com</a>
+        <div class="space-y-5">
+          <!-- GitHub -->
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#333]/10 flex items-center justify-center text-[#333]">
+                <i class="fa fa-github"></i>
+              </div>
+              <div>
+                <h4 class="font-medium text-sm">GitHub</h4>
+                <p class="text-xs text-gray-500">@nyanko_dev</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-sm">248</p>
+              <p class="text-xs text-gray-500">粉丝</p>
+            </div>
+          </div>
+          
+          <!-- Twitter -->
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center text-[#1DA1F2]">
+                <i class="fa fa-twitter"></i>
+              </div>
+              <div>
+                <h4 class="font-medium text-sm">Twitter</h4>
+                <p class="text-xs text-gray-500">@nyanko_coder</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-sm">1.2k</p>
+              <p class="text-xs text-gray-500">粉丝</p>
+            </div>
+          </div>
+          
+          <!-- Instagram -->
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#E60023]/10 flex items-center justify-center text-[#E60023]">
+                <i class="fa fa-instagram"></i>
+              </div>
+              <div>
+                <h4 class="font-medium text-sm">Instagram</h4>
+                <p class="text-xs text-gray-500">@nyanko_illust</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-sm">3.5k</p>
+              <p class="text-xs text-gray-500">粉丝</p>
+            </div>
+          </div>
+          
+          <!-- Bilibili -->
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-[#FB7299]/10 flex items-center justify-center text-[#FB7299]">
+                <i class="fa fa-play-circle"></i>
+              </div>
+              <div>
+                <h4 class="font-medium text-sm">Bilibili</h4>
+                <p class="text-xs text-gray-500">喵酱的开发日常</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-sm">865</p>
+              <p class="text-xs text-gray-500">粉丝</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 pt-4 border-t border-gray-100">
+          <button class="w-full py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2">
+            <i class="fa fa-plus"></i>
+            <span>添加社交账号</span>
+          </button>
         </div>
       </div>
     </section>
   </main>
-
+  
   <!-- 页脚 -->
-  <footer class="bg-white shadow-inner py-8 module-transition">
-    <div class="max-w-7xl mx-auto px-4">
+  <footer class="bg-white/80 backdrop-blur-md border-t border-primary/20 py-6 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col md:flex-row justify-between items-center">
-        <div class="mb-4 md:mb-0">
-          <p class="text-dark/70">&copy; 2023 动漫前端开发者. 保留所有权利.</p>
+        <div class="mb-4 md:mb-0 text-center md:text-left">
+          <div class="flex items-center justify-center md:justify-start space-x-2">
+            <span class="text-primary text-xl">💖</span>
+            <span class="font-bold text-dark">喵酱的仪表盘</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">二次元开发者的个人数据中心</p>
         </div>
-        <div class="flex gap-6">
-          <a href="#about" class="text-dark/70 hover:text-primary transition-colors">关于我</a>
-          <a href="#projects" class="text-dark/70 hover:text-primary transition-colors">项目</a>
-          <a href="#contact" class="text-dark/70 hover:text-primary transition-colors">联系我</a>
+        
+        <div class="text-xs text-gray-500">
+          &copy; 2023 喵酱. 保留所有权利.
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- 主题切换按钮 -->
-  <button class="theme-toggle fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-lg flex items-center justify-center cursor-pointer z-20 hover:scale-110 hover:rotate-10 transition-all">
-    <i class="fa fa-moon-o"></i>
-  </button>
-
   <script>
-    // 页面加载后，移除加载器
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        const loader = document.getElementById('page-loader');
-        loader.style.opacity = 0;
-        setTimeout(() => {
-          loader.style.display = 'none';
-          initPage();
-        }, 500);
-      }, 800);
+    // 页面加载完成后初始化
+    window.addEventListener('load', function() {
+      // 设置当前日期
+      setCurrentDate();
+      
+      // 初始化滚动动画
+      initScrollAnimations();
+      
+      // 初始化技能趋势图表
+      initSkillsChart();
+      
+      // 初始化技能分布图表
+      initSkillsDistribution();
     });
     
-    // 初始化页面
-    function initPage() {
-      // 显示模块动画
-      showModulesOnScroll();
-      
-      // 初始化技能条动画
-      initSkillBars();
-      
-      // 检查本地存储中的主题设置
-      checkThemePreference();
+    // 设置当前日期
+    function setCurrentDate() {
+      const now = new Date();
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', options);
     }
     
-    // 模块滚动显示动画
-    function showModulesOnScroll() {
-      const modules = document.querySelectorAll('.module');
+    // 滚动动画
+    function initScrollAnimations() {
+      const elements = document.querySelectorAll('.fade-in');
       
-      const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-      };
-      
-      const observer = new IntersectionObserver((entries, observer) => {
+      const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible');
             observer.unobserve(entry.target);
           }
         });
-      }, observerOptions);
+      }, { threshold: 0.1 });
       
-      modules.forEach(module => {
-        observer.observe(module);
-      });
+      elements.forEach(element => observer.observe(element));
     }
     
-    // 技能条动画
-    function initSkillBars() {
-      const skillBars = document.querySelectorAll('.skill-progress');
+    // 技能趋势图表
+    function initSkillsChart() {
+      const ctx = document.getElementById('skillsChart').getContext('2d');
       
-      const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.5
-      };
-      
-      const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const width = entry.target.getAttribute('data-width');
-            entry.target.style.width = width;
-            observer.unobserve(entry.target);
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+          datasets: [
+            {
+              label: '前端技术',
+              data: [65, 68, 72, 76, 80, 85],
+              borderColor: '#FF7EB9',
+              backgroundColor: 'rgba(255, 126, 185, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: '设计能力',
+              data: [70, 73, 75, 78, 82, 86],
+              borderColor: '#A78BFA',
+              backgroundColor: 'rgba(167, 139, 250, 0.1)',
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: '动画制作',
+              data: [55, 60, 65, 70, 75, 80],
+              borderColor: '#FECACA',
+              backgroundColor: 'rgba(254, 202, 202, 0.1)',
+              tension: 0.4,
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                font: {
+                  family: 'FZMW'
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                },
+                font: {
+                  family: 'FZMW'
+                }
+              }
+            },
+            x: {
+              ticks: {
+                font: {
+                  family: 'FZMW'
+                }
+              }
+            }
           }
-        });
-      }, observerOptions);
-      
-      skillBars.forEach(bar => {
-        observer.observe(bar);
+        }
       });
     }
     
-    // 主题切换
-    document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-    
-    function toggleTheme() {
-      const isDark = document.body.toggleAttribute('data-theme');
-      const icon = document.querySelector('.theme-toggle i');
+    // 技能分布图表
+    function initSkillsDistribution() {
+      const ctx = document.getElementById('skillsDistribution').getContext('2d');
       
-      if (isDark) {
-        icon.classList.remove('fa-moon-o');
-        icon.classList.add('fa-sun-o');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        icon.classList.remove('fa-sun-o');
-        icon.classList.add('fa-moon-o');
-        localStorage.setItem('theme', 'light');
-      }
-    }
-    
-    // 检查主题偏好
-    function checkThemePreference() {
-      const savedTheme = localStorage.getItem('theme');
-      const icon = document.querySelector('.theme-toggle i');
-      
-      if (savedTheme === 'dark') {
-        document.body.setAttribute('data-theme', 'dark');
-        icon.classList.remove('fa-moon-o');
-        icon.classList.add('fa-sun-o');
-      }
-    }
-    
-    // 移动端菜单切换
-    function toggleMenu() {
-      const mobileMenu = document.getElementById('mobile-menu');
-      mobileMenu.classList.toggle('translate-x-full');
+      const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['HTML/CSS', 'JavaScript', 'React', 'Vue', 'UI设计', '其他'],
+          datasets: [{
+            data: [20, 25, 18, 15, 15, 7],
+            backgroundColor: [
+              '#FF7EB9',
+              '#FF9EBC',
+              '#A78BFA',
+              '#C0A3FF',
+              '#FECACA',
+              '#FEE2E2'
+            ],
+            borderWidth: 0,
+            hoverOffset: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                padding: 15,
+                font: {
+                  family: 'FZMW',
+                  size: 11
+                }
+              }
+            }
+          }
+        }
+      });
     }
   </script>
-  
 </body>
 </html>
+    
