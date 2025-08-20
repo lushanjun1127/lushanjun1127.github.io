@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人主页</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEJx3Xv8w1+KpX9pK6a7hV4SnsR2zR1XvfFj8TXNT6X9b2l7E+6cI1Q93i5oG" crossorigin="anonymous">
+  <style>
+    .card {
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    .card-text {
+      font-size: 1rem;
+      color: #6c757d;
+    }
+    .btn-custom {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-custom:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container my-5">
+    <h1 class="text-center mb-4">欢迎来到我的个人主页</h1>
+
+    <div class="row g-4">
+      <!-- 我的项目模块 -->
+      <div class="col-md-4">
+        <div class="card">
+          <img src="https://via.placeholder.com/350x200" class="card-img-top" alt="我的项目">
+          <div class="card-body">
+            <h5 class="card-title">我的项目</h5>
+            <p class="card-text">展示我的开源项目和个人作品。</p>
+            <a href="#" class="btn btn-custom">查看更多</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技术栈模块 -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">技术栈</h5>
+            <p class="card-text">React, Node.js, Git, Docker 等。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 博客模块 -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">我的博客</h5>
+            <p class="card-text">分享我的技术文章和个人经验。</p>
+            <a href="#" class="btn btn-custom">阅读更多</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 联系我模块 -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">联系我</h5>
+            <p class="card-text">通过电子邮件或社交媒体与我取得联系。</p>
+            <a href="mailto:your-email@example.com" class="btn btn-custom">发送邮件</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- GitHub模块 -->
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">GitHub</h5>
+            <p class="card-text">查看我的GitHub开源项目。</p>
+            <a href="https://github.com/enolan8" class="btn btn-custom" target="_blank">访问GitHub</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 引入Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pzjw8f+ua7Kw1TIq0qGnn2Ff8x+mTGVU2A84mFgkNx9NO7Mb5npQGB5GYPV2t4H3" crossorigin="anonymous"></script>
+</body>
+</html>
