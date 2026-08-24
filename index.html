@@ -1,1 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lushanjun1127 · 个人主页</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 48px 40px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #fff;
+            font-weight: 600;
+        }
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+        .bio {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        .links a {
+            display: inline-block;
+            padding: 10px 22px;
+            border-radius: 40px;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .links a:hover {
+            background: #6c5ce7;
+            color: #fff;
+            transform: scale(1.03);
+        }
+        .footer {
+            margin-top: 28px;
+            font-size: 13px;
+            color: #9ca3af;
+            border-top: 1px solid #f0f2f5;
+            padding-top: 20px;
+        }
+        .footer a {
+            color: #6c5ce7;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <!-- 头像区（可以换成你的首字母或表情） -->
+        <div class="avatar">🌿</div>
 
+        <!-- 名字 -->
+        <h1>Lushanjun1127</h1>
+
+        <!-- 一句话简介 -->
+        <p class="bio">
+            你好！这里是 Lushanjun1127 的个人小站。<br>
+            喜欢写代码、折腾博客、探索有趣的东西。
+        </p>
+
+        <!-- 社交/友链按钮（按需修改） -->
+        <div class="links">
+            <a href="#">📝 博客</a>
+            <a href="#">🐱 GitHub</a>
+            <a href="#">🐦 微博</a>
+            <a href="#">📧 邮箱</a>
+        </div>
+
+        <!-- 底部小字 -->
+        <div class="footer">
+            ✨ 欢迎常来 · <a href="https://github.com/lushanjun1127" target="_blank">@lushanjun1127</a>
+        </div>
+    </div>
+</body>
+</html>
