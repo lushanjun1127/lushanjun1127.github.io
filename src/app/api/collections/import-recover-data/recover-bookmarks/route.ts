@@ -1,0 +1,69 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { ExportedBookmark } from "../../[id]/export/route";
+import pLimit from "p-limit";
+
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
+export async function POST(
+  request: Request,
+) {
+  try {
+    // Parse imported data
+    const { bookmarks, collectionId, folderMap } = await request.json();
+    
+    if (!collectionId || !await prisma.collection.findUnique({ where: { id: collectionId } })) {
+      return NextResponse.json({ error: "请选择有效的书签集合" }, { status: 400 });
+    }
+    
+
+    // Set concurrency limit, for example, process 5 bookmarks simultaneously
+    const limit = pLimit(10);
+
+    // Use p-limit to concurrently import bookmarks
+    const importedBookmarks = await Promise.all(
+      bookmarks.map((bookmark: ExportedBookmark) => 
+        limit(async () => {
+          const folderId = bookmark.folderTempId
+            ? folderMap.find((item: any) => item.tempId === bookmark.folderTempId)?.id
+            : undefined;
+
+          return prisma.bookmark.create({
+            data: {
+              title: bookmark.title,
+              url: bookmark.url,
+              description: bookmark.description,
+              icon: bookmark.icon,
+              isFeatured: bookmark.isFeatured,
+              sortOrder: bookmark.sortOrder,
+              collectionId: collectionId,
+              folderId: folderId,
+              tags: {
+                connectOrCreate: bookmark.tags.map((tagName) => ({
+                  where: {
+                    name: tagName,
+                  },
+                  create: {
+                    name: tagName,
+                  },
+                })),
+              },
+            },
+          });
+        })
+      )
+    );
+
+    return NextResponse.json({
+      message: "书签导入成功",
+      importedBookmarkCount: importedBookmarks.length,
+    });
+  } catch (error) {
+    console.error("Import bookmarks error:", error);
+    return NextResponse.json(
+      { error: "导入书签失败", details: String(error) },
+      { status: 500 }
+    );
+  }
+}
