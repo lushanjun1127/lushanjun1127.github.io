@@ -150,23 +150,27 @@ export default async function RootLayout({
   };
 
   if (process.env.NODE_ENV === "production") {
-    const tableExists = await checkSiteSettingTableExists();
-    if (tableExists) {
-      // 获取统计代码ID
-      const analytics = await prisma.siteSetting.findMany({
-        where: {
-          key: {
-            in: ["googleAnalyticsId", "clarityId"],
+    try {
+      const tableExists = await checkSiteSettingTableExists();
+      if (tableExists) {
+        // 获取统计代码ID
+        const analytics = await prisma.siteSetting.findMany({
+          where: {
+            key: {
+              in: ["googleAnalyticsId", "clarityId"],
+            },
           },
-        },
-      });
+        });
 
-      if (analytics.length > 0) {
-        analyticsMap = analytics.reduce((acc, setting) => {
-          acc[setting.key] = setting.value || "";
-          return acc;
-        }, {} as Record<string, string>);
+        if (analytics.length > 0) {
+          analyticsMap = analytics.reduce((acc: any, setting: any) => {
+            acc[setting.key] = setting.value || "";
+            return acc;
+          }, {} as Record<string, string>);
+        }
       }
+    } catch (error) {
+      console.error("获取统计设置失败，已降级为无统计代码:", error);
     }
   }
 
