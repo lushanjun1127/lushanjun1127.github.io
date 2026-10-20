@@ -14,7 +14,9 @@ declare module "next-auth" {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: getAuthSecret(),
+  get secret() {
+    return getAuthSecret();
+  },
   providers: [
     CredentialsProvider({
       name: "邮箱和密码",
