@@ -50,3 +50,6 @@ next-env.d.ts
 
 # 操作系统文件
 Thumbs.db
+
+# AI 工作区数据
+.workbuddy-ai/
