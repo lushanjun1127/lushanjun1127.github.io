@@ -29,6 +29,10 @@ jobs:
         run: npm ci
 
       - name: Validate Prisma schema
+        # validate 只做静态校验，不建立连接；提供占位值满足 env() 引用即可
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ci?schema=public
+          DATABASE_URL_UNPOOLED: postgresql://user:pass@localhost:5432/ci?schema=public
         run: npx prisma validate
 
       - name: Build
