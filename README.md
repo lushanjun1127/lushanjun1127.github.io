@@ -45,6 +45,17 @@
 - **Deployment**: Vercel
 - **Database**: PostgreSQL
 
+## 🗄️ Database Migrations
+
+构建阶段不再执行 `prisma db push`，表结构变更统一走迁移：
+
+1. 修改 `prisma/schema.prisma`
+2. 生成迁移：`npx prisma migrate dev --name <change>`（会连接 `DATABASE_URL_UNPOOLED` 指向的库）
+3. 提交 `prisma/migrations/`
+4. 部署后按需同步：`npx prisma migrate deploy`
+
+> 注意：本项目开发与生产共用同一 Neon 数据库，执行 `migrate dev` 前请确认目标库。
+
 ## 👥 Community
 
 - Twitter: [@pintree_io](https://twitter.com/pintree_io)

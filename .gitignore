@@ -44,7 +44,6 @@ next-env.d.ts
 *.swo
 
 # Prisma
-/prisma/migrations/
 /prisma/*.db
 /prisma/*.db-journal
 
