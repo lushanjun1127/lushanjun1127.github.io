@@ -1,1 +1,7 @@
-export const authSecret = process.env.NEXTAUTH_SECRET || 'QmJBzzN86SFfUw4MNRg6e3AngucQZhjMP/sOfvqeP6M=';
+export function getAuthSecret(): string {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('NEXTAUTH_SECRET is not set. Refusing to start with a fallback secret.');
+  }
+  return secret;
+}

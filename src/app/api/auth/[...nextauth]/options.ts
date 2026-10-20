@@ -2,7 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import { DefaultSession } from "next-auth";
-import { authSecret } from '@/lib/auth/secret';
+import { getAuthSecret } from '@/lib/auth/secret';
 
 // 扩展 Session 类型
 declare module "next-auth" {
@@ -14,7 +14,7 @@ declare module "next-auth" {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: authSecret,
+  secret: getAuthSecret(),
   providers: [
     CredentialsProvider({
       name: "邮箱和密码",
