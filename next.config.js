@@ -19,9 +19,9 @@ const nextConfig = {
         hostname: 'favicon.im',
       },
     ],
-    minimumCacheTTL: 0,
-    dangerouslyAllowSVG: true,
     unoptimized: true,
+    // 注意：unoptimized 下图片不经优化器，remotePatterns 与 SVG 放行均不生效。
+    // 若将来开启优化，必须先把 hostname: '**' 收窄为白名单，并谨慎放开 SVG。
   },
   experimental: {
     missingSuspenseWithCSRBailout: false,
