@@ -49,7 +49,7 @@ model Folder {
 model Bookmark {
   id          String      @id @default(cuid())
   title       String                               
-  url         String                               
+  url         String      @unique                  
   description String?                              
   icon        String?                              
   isFeatured  Boolean     @default(false)          

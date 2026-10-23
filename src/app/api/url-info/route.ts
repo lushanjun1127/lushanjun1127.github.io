@@ -136,12 +136,21 @@ const iconLimit = pLimit(ICON_CONCURRENCY);
 
 async function checkUrl(url: string): Promise<boolean> {
   try {
-    const { res } = await safeFetch(
+    // 走 safeFetch，保留逐跳 SSRF 校验（私网/非 http(s) 一律拦截）
+    const head = await safeFetch(
       url,
       { method: "HEAD", headers: { "User-Agent": UA } },
       { timeoutMs: ICON_TIMEOUT_MS }
-    );
-    return res.ok;
+    ).catch(() => null);
+    if (head?.res.ok) return true;
+
+    // 部分 CDN 对 HEAD 返回 405/403，回退 GET 只取首字节
+    const get = await safeFetch(
+      url,
+      { method: "GET", headers: { "User-Agent": UA, Range: "bytes=0-0" } },
+      { timeoutMs: ICON_TIMEOUT_MS }
+    ).catch(() => null);
+    return get?.res.ok === true;
   } catch {
     return false;
   }
@@ -183,7 +192,7 @@ async function collectIconCandidates(domain: string, baseUrl: string, $?: Cheeri
 
   const fallback = [
     `https://${domain}/favicon.ico`,
-    `https://www.google.com/s2/favicons?domain=${domain}&sz=128`,
+    `https://favicon.im/${domain}`,
     `https://logo.clearbit.com/${domain}`,
   ];
   for (const f of fallback) {
@@ -204,7 +213,7 @@ async function filterReachable(candidates: string[]): Promise<string[]> {
 }
 
 async function resolveIcons(domain: string, baseUrl: string, $?: CheerioAPI): Promise<{ icons: string[]; icon: string }> {
-  const fallbackIcon = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+  const fallbackIcon = `https://favicon.im/${domain}`;
   try {
     const candidates = await collectIconCandidates(domain, baseUrl, $);
     const deadline = new Promise<string[]>((resolve) => setTimeout(() => resolve([]), ICON_TOTAL_TIMEOUT_MS));
@@ -216,6 +225,19 @@ async function resolveIcons(domain: string, baseUrl: string, $?: CheerioAPI): Pr
   } catch {
     return { icons: [fallbackIcon], icon: fallbackIcon };
   }
+}
+
+// 元信息提取工具：优先使用站点自有的 og 描述，避免 <title> 里的“首页 - 站点名”噪音
+function getMetaContent($: CheerioAPI, key: string): string {
+  return (
+    $(`meta[property="${key}"]`).attr("content") ||
+    $(`meta[name="${key}"]`).attr("content") ||
+    ""
+  ).trim();
+}
+
+function extractTag($: CheerioAPI, tag: string): string {
+  return ($(tag).first().text() || "").trim();
 }
 
 export async function POST(request: Request) {
@@ -258,17 +280,24 @@ export async function POST(request: Request) {
 
       const $ = cheerio.load(html);
       const title =
-        ($("title").text() ||
-          $('meta[property="og:title"]').attr("content") ||
-          $('meta[name="twitter:title"]').attr("content") ||
-          domain
-        ).trim();
+        getMetaContent($, "og:title") ||
+        getMetaContent($, "twitter:title") ||
+        extractTag($, "title") ||
+        domain;
       const description =
-        ($('meta[name="description"]').attr("content") ||
-          $('meta[property="og:description"]').attr("content") ||
-          $('meta[name="twitter:description"]').attr("content") ||
+        (getMetaContent($, "description") ||
+          getMetaContent($, "og:description") ||
+          getMetaContent($, "twitter:description") ||
           ""
         ).trim();
+
+      // 降级拦截：抓不到任何有效信息时，交给前端手动填写，而不是返回裸域名
+      if (title === domain && (!description || description.trim() === "")) {
+        return NextResponse.json(
+          { error: "无法从该网址提取有效信息，请手动填写" },
+          { status: 422 }
+        );
+      }
 
       const { icons, icon } = await resolveIcons(domain, baseUrl, $);
       return NextResponse.json({ title, description, icons, icon });

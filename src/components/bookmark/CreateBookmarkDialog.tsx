@@ -36,6 +36,24 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { toast } from "sonner";
+
+// 智能截断：优先在分隔符/句末标点处断开，避免半句
+const truncateTitle = (text: string) => {
+  if (!text) return "";
+  if (text.length <= 15) return text;
+  const match = text.match(/^(.{10,15}?)[-|_—–]/);
+  if (match) return match[1].trim();
+  return text.slice(0, 15);
+};
+
+const truncateDescription = (text: string) => {
+  if (!text) return "";
+  if (text.length <= 40) return text;
+  const match = text.match(/^(.{20,40}?)[。！!.]/);
+  if (match) return match[1].trim();
+  return text.slice(0, 40);
+};
 
 interface Collection {
   id: string;
@@ -139,6 +157,16 @@ export function CreateBookmarkDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.title.length < 10 || formData.title.length > 15) {
+      toast.error("标题长度必须在 10-15 个字之间");
+      return;
+    }
+    if (formData.description && (formData.description.length < 20 || formData.description.length > 40)) {
+      toast.error("描述长度必须在 20-40 个字之间");
+      return;
+    }
+
     setLoading(true);
     setError("");  // 重置错误信息
 
@@ -340,25 +368,33 @@ export function CreateBookmarkDialog({
           {/* 仅在获取信息后显示这些字段 */}
           {hasLoadedInfo && (
             <>
-              <div className="space-y-2">
+              {/* 标题部分 */}
+              <div className="space-y-1">
                 <Label>标题</Label>
                 <Input
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                  maxLength={15}
+                  placeholder="10-15个字符"
                   required
                 />
+                <p className={`text-xs text-right ${formData.title.length < 10 ? "text-red-500" : "text-muted-foreground"}`}>
+                  {formData.title.length} / 15 字 (至少10字)
+                </p>
               </div>
 
-              <div className="space-y-2">
+              {/* 描述部分 */}
+              <div className="space-y-1">
                 <Label>描述</Label>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, description: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                  maxLength={40}
+                  placeholder="20-40个字符"
                 />
+                <p className={`text-xs text-right ${formData.description.length < 20 ? "text-red-500" : "text-muted-foreground"}`}>
+                  {formData.description.length} / 40 字 (至少20字)
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -463,15 +499,22 @@ export function CreateBookmarkDialog({
                     });
                     
                     const data: UrlInfo = await response.json();
-                    
+
+                    // 422：抓不到有效信息，放开字段让用户手动填写
+                    if (response.status === 422) {
+                      setError(data.error || "无法从该网址提取有效信息，请手动填写");
+                      setHasLoadedInfo(true);
+                      return;
+                    }
+
                     if (!response.ok) {
                       throw new Error(data.error || "获取URL信息失败");
                     }
                     
                     setFormData(prev => ({
                       ...prev,
-                      title: data.title || prev.title,
-                      description: data.description || prev.description,
+                      title: truncateTitle(data.title || prev.title),
+                      description: truncateDescription(data.description || prev.description),
                       icon: data.icon || prev.icon,
                     }));
                     setAvailableIcons(data.icons || []);

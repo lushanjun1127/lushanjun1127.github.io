@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
@@ -78,6 +79,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // 长度校验
+    if (title.length < 10 || title.length > 15) {
+      return NextResponse.json({ error: "标题长度必须在10-15字之间" }, { status: 400 });
+    }
+    if (description && (description.length < 20 || description.length > 40)) {
+      return NextResponse.json({ error: "描述长度必须在20-40字之间" }, { status: 400 });
+    }
+
     // 创建书签的基础数据
     const bookmarkData = {
       title,
@@ -128,6 +137,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(bookmark);
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return NextResponse.json({ error: "该网址已存在于书签中，请勿重复添加" }, { status: 409 });
+    }
     console.error("Failed to create bookmark:", error);
     return NextResponse.json(
       { error: "创建书签失败，请检查各字段是否正确" },
