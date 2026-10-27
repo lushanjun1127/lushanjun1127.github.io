@@ -43,11 +43,6 @@ export function FolderSidebar({
   onCollectionChange,
   collections
 }: FolderSidebarProps) {
-  // 如果没有集合，直接返回 null
-  if (!collections || !Array.isArray(collections) || collections.length === 0) {
-    return null;
-  }
-
   const [folderTree, setFolderTree] = useState<FolderWithChildren[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -158,6 +153,11 @@ export function FolderSidebar({
       </div>
     );
   };
+
+  // 如果没有集合，直接返回 null（放在所有 Hook 之后，避免条件调用 Hook）
+  if (!collections || !Array.isArray(collections) || collections.length === 0) {
+    return null;
+  }
 
   return (
     <div className="w-64 border-r bg-background">

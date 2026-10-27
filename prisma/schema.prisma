@@ -5,6 +5,8 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
+  // 可选：仅在需要直连数据库（如连接池代理场景）时配置 DATABASE_URL_UNPOOLED；
+  // 未配置时 src/lib/prisma.ts 会回退使用 DATABASE_URL。
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
