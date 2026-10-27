@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
+import { authOptions } from '@/app/api/auth/[...nextauth]/options';
 export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
+  // 服务端鉴权：不依赖 Middleware 白名单，防止漏配导致统计数据泄露
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: '请先登录管理后台' }, { status: 401 });
+  }
   const days = Math.max(1,Math.min(90,Number(new URL(request.url).searchParams.get('days')) || 30));
   const since = new Date(Date.now() - days*86400000);
   const [totals,daily,pages,clicks,collections] = await Promise.all([

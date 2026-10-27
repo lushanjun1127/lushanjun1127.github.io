@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "dotenv -e .env.local -- prisma db push",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "generate-hash": "tsx generate-hash.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
